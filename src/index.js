@@ -1,37 +1,49 @@
 import './sass/main.scss';
 
-const colors = [
-  '#FFFFFF',
-  '#2196F3',
-  '#4CAF50',
-  '#FF9800',
-  '#009688',
-  '#795548',
-];
-
-const startBtn = document.querySelector('[data-action="start"]');
-const stoptBtn = document.querySelector('[data-action="stop"]');
-const body = document.querySelector('body');
-let startInterval = null;
-
-
-const randomIntegerFromInterval = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) + min);
+const refs = {
+  daysField: document.querySelector('[data-value="days"]'),
+  hoursField: document.querySelector('[data-value="hours"]'),
+  minsField: document.querySelector('[data-value="mins"]'),
+  secsField: document.querySelector('[data-value="secs"]'),
 };
 
-const newColor = () => {
-    body.style.backgroundColor = colors[randomIntegerFromInterval(0, 5)];
+class CountdownTimer {
+  constructor({ onTick, targetDate }) {
+    this.onTick = onTick;
+    this.targetDate = Date.now(targetDate);
+    this.intervalId = setInterval(() => {
+      const currentTime = Date.now();
+      const deltaTime = targetDate - currentTime;
+      const time = this.getTimeComponents(deltaTime);
+      updateClockface(time);
+      this.onTick = time;
+    }, 1000);
+  }
+
+  getTimeComponents(time) {
+    const days = Math.floor(time / (1000 * 60 * 60 * 24));
+    const hours = this.pad(Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+    const mins = this.pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
+    const secs = this.pad(Math.floor((time % (1000 * 60)) / 1000));
+    return { days, hours, mins, secs };
+  }
+
+  pad(value) {
+    return String(value).padStart(2, '0');
+  }
 }
 
-const startCallback = () => {
-    startInterval = setInterval(newColor, 1000);
-    startBtn.disabled = true;
-}
-const stopCallback = () => {
-    clearInterval(startInterval);
-    startBtn.disabled = false;
+function updateClockface({ days, hours, mins, secs }) {
+  refs.daysField.textContent = `${days} :`;
+  refs.hoursField.textContent = `${hours} :`;
+  refs.minsField.textContent = `${mins} :`;
+  refs.secsField.textContent = `${secs}`;
 }
 
+const countdownTimer = new CountdownTimer({
+  selector: '#timer-1',
+  targetDate: new Date('Aug 31, 2021'),
+  onTick: updateClockface,
+});
 
-startBtn.addEventListener('click', startCallback);
-stoptBtn.addEventListener('click', stopCallback);
+
